@@ -2,6 +2,14 @@
 
 using namespace std;
 
+int	sqr(int a){
+	return (a * a);
+}
+
+double	find_dist(int x1, int y1, int x2, int y2){
+	return (sqrt(sqr(y2 - y1) + sqr(x2 - x1)));
+}
+
 SeaBedSecurity::SeaBedSecurity(void){
 	_round = 0;
 	cin >> _creature_count; cin.ignore();
@@ -18,9 +26,16 @@ SeaBedSecurity::~SeaBedSecurity(){
 void	SeaBedSecurity::print_all(void){
 	cerr << "_round=" << _round << endl;
 	cerr << "_creature_count=" << _creature_count << endl;
-	for (int i = 0; i < _creature_count; i++){
+	for (int i = 0; i < _creature_count; i++)
 		cerr << "_creature[" << i << "] creature_id=" << _creature[i].creature_id << " color=" << _creature[i].color << " type=" << _creature[i].type << endl;
-	}
+}
+
+void	SeaBedSecurity::increment_round(void){
+	_round++;
+}
+
+int		SeaBedSecurity::get_round(void){
+	return (_round);
 }
 
 SeaBedSecurityLocal::SeaBedSecurityLocal(void){
@@ -85,25 +100,53 @@ SeaBedSecurityLocal::~SeaBedSecurityLocal(){
 };
 
 void	SeaBedSecurityLocal::print_all(void){
+	int	i;
+
 	// Score
+	cerr << "---------------------------------------------------------" << endl;
 	cerr << "_my_score=" << _my_score << endl;
 	cerr << "_foe_score=" << _foe_score << endl;
 
-	// Drone count
+	// Scan count
+	cerr << "---------------------------------------------------------" << endl;
 	cerr << "_my_scan_count=" << _my_scan_count << endl;
-	for (int i = 0; i < _my_scan_count; i++){
-		cerr << "_my_scan[" << i << "]=" << _my_scan[i] << endl;
-	}
+	for (i = 0; i < _my_scan_count; i++)
+		cerr << "_my_scan[" << i << "] creature_id=" << _my_scan[i] << endl;
 	cerr << "_foe_scan_count=" << _foe_scan_count << endl;
-	for (int i = 0; i < _foe_scan_count; i++){
-		cerr << "_foe_scan[" << i << "]=" << _foe_scan[i] << endl;
-	}
+	for (i = 0; i < _foe_scan_count; i++)
+		cerr << "_foe_scan[" << i << "] creature_id=" << _my_scan[i] << endl;
+
+	// Drone drone count
+	cerr << "---------------------------------------------------------" << endl;
+	cerr << "_my_drone_count=" << _my_drone_count << endl;
+	for (i = 0; i < _my_drone_count; i++)
+		cerr << "_my_drone[" << i << "] drone_id=" << _my_drone[i].drone_id << " drone_x=" << _my_drone[i].drone_x << " drone_y=" << _my_drone[i].drone_y << " emergency=" << _my_drone[i].emergency << " battery=" << _my_drone[i].battery << endl;
+	cerr << "_foe_drone_count=" << _foe_drone_count << endl;
+	for (i = 0; i < _foe_drone_count; i++)
+		cerr << "_foe_drone[" << i << "] drone_id=" << _foe_drone[i].drone_id << " drone_x=" << _foe_drone[i].drone_x << " drone_y=" << _foe_drone[i].drone_y << " emergency=" << _foe_drone[i].emergency << " battery=" << _foe_drone[i].battery << endl;
 
 	// Drone scan count
+	cerr << "---------------------------------------------------------" << endl;
+	cerr << "_drone_scan_count=" << _drone_scan_count << endl;
+	for (i = 0; i < _drone_scan_count; i++)
+		cerr << "_drone_scan[" << i << "] drone_id=" << _drone_scan[i].drone_id << " creature_id=" << _drone_scan[i].creature_id << endl;
+
+	// Visible creature count
+	cerr << "---------------------------------------------------------" << endl;
+	cerr << "_visible_creature_count=" << _visible_creature_count << endl;
+	for (i = 0; i < _visible_creature_count; i++)
+		cerr << "_visible_creature[" << i << "] creature_id" << _visible_creature[i].creature_id << " creature_x" << _visible_creature[i].creature_x << " creature_y" << _visible_creature[i].creature_y << " creature_vx" << _visible_creature[i].creature_vx << " creature_vy" << _visible_creature[i].creature_vy << endl;
+
+	// Radar blip count
+	cerr << "---------------------------------------------------------" << endl;
+	cerr << "_radar_blip_count=" << _radar_blip_count << endl;
+	for (i = 0; i < _radar_blip_count; i++)
+		cerr << "_radar_blip[" << i << "] drone_id=" << _radar_blip[i].drone_id << " creature_id=" << _radar_blip[i].creature_id << " radar=" << _radar_blip[i].radar << endl;
 }
 
-void	SeaBedSecurityLocal::game(void){
+void	SeaBedSecurityLocal::game(SeaBedSecurity &sbs){
+	(void)sbs;
 	for (int i = 0; i < 2; i++){
-		cout << "WAIT 1 I am stupid" << endl; // MOVE <x> <y> <light (1|0)> | WAIT <light (1|0)>
+		cout << "WAIT 1" << endl; // MOVE <x> <y> <light (1|0)> | WAIT <light (1|0)>
 	}
 }

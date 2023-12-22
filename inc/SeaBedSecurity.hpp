@@ -12,6 +12,9 @@ class SeaBedSecurity{
 		~SeaBedSecurity();
 
 		void	print_all(void);
+		void	increment_round(void);
+
+		int		get_round(void);
 };
 
 class SeaBedSecurityLocal{
@@ -26,7 +29,7 @@ class SeaBedSecurityLocal{
 		int							_foe_scan_count;			// Foe number of scans saved
 		vector<int>					_foe_scan;					// Foe list of scans saved
 
-		// Drone scan count
+		// Drone drone count
 		int 						_my_drone_count;			// My number of drones (should be 2)
 		vector<drone>				_my_drone;					// My list of drones
 		int							_foe_drone_count;			// Foe number of drones (should be 2)
@@ -48,5 +51,5 @@ class SeaBedSecurityLocal{
 		~SeaBedSecurityLocal();
 
 		void	print_all(void);
-		void	game(void);
+		void	game(SeaBedSecurity &sbs);
 };
