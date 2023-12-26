@@ -9,6 +9,6 @@ int	main(void){
 		SeaBedSecurityLocal	sbsl;
 
 		sbsl.game(sbs);
-		sbs.increment_round();
+		sbs.incrementRound();
 	}
 }
