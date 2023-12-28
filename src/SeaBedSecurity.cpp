@@ -57,6 +57,10 @@ creature	&SeaBedSecurity::getCreature(int creature_id){
 	return (_creature[i]);
 }
 
+void		SeaBedSecurity::setTargetType(int target_type){
+	_target_type = target_type;
+}
+
 SeaBedSecurityLocal::SeaBedSecurityLocal(void){
 	// Score
 	cin >> _my_score; cin.ignore();
@@ -165,6 +169,8 @@ void	SeaBedSecurityLocal::print(void){
 
 bool	SeaBedSecurityLocal::isDroneScan(int creature_id){
 	for (int i = 0; i < _drone_scan_count; i++){
+		if (_drone_scan[i].drone_id != _my_drone[0].drone_id && _drone_scan[i].drone_id != _my_drone[1].drone_id)
+			continue;
 		if (_drone_scan[i].creature_id == creature_id)
 			return (true);
 	}
@@ -172,45 +178,74 @@ bool	SeaBedSecurityLocal::isDroneScan(int creature_id){
 }
 
 void	SeaBedSecurityLocal::moveUp(int &i){
-	cout << "MOVE " << _my_drone[i].drone_x << " " << _my_drone[i].drone_y - 600 << " 1" << endl;
+	cout << "MOVE " << _my_drone[i].drone_x << ' ' << _my_drone[i].drone_y - 600 << ' ' << _light << endl;
+}
+
+void	SeaBedSecurityLocal::moveDown(int &i){
+	cout << "MOVE " << _my_drone[i].drone_x << ' ' << _my_drone[i].drone_y + 600 << ' ' << _light << endl;
 }
 
 void	SeaBedSecurityLocal::moveTL(int &i){
-	cout << "MOVE " << _my_drone[i].drone_x - 600 << " " << _my_drone[i].drone_y - 600 << " 1" << endl;
+	cout << "MOVE " << _my_drone[i].drone_x - 600 << ' ' << _my_drone[i].drone_y - 600 << ' ' << _light << endl;
 }
 
 void	SeaBedSecurityLocal::moveTR(int &i){
-	cout << "MOVE " << _my_drone[i].drone_x + 600 << " " << _my_drone[i].drone_y - 600 << " 1" << endl;
+	cout << "MOVE " << _my_drone[i].drone_x + 600 << ' ' << _my_drone[i].drone_y - 600 << ' ' << _light << endl;
 }
 
 void	SeaBedSecurityLocal::moveBR(int &i){
-	cout << "MOVE " << _my_drone[i].drone_x - 600 << " " << _my_drone[i].drone_y + 600 << " 1" << endl;
+	cout << "MOVE " << _my_drone[i].drone_x - 600 << ' ' << _my_drone[i].drone_y + 600 << ' ' << _light << endl;
 }
 
 void	SeaBedSecurityLocal::moveBL(int &i){
-	cout << "MOVE " << _my_drone[i].drone_x + 600 << " " << _my_drone[i].drone_y + 600 << " 1" << endl;
+	cout << "MOVE " << _my_drone[i].drone_x + 600 << ' ' << _my_drone[i].drone_y + 600 << ' ' << _light << endl;
 }
 
 void	SeaBedSecurityLocal::game(SeaBedSecurity &sbs){
 	int					i;		// For my drone
-	int					j;		// For radar blip
+	int					j;		// For monsters and radar blip
 	char				lr;		// Character for drone
 	bool				move;	// Have move this round
 	vector<radar_blip>	target;	// Drone target
 
-	for (i = 0, move = false; i < 2; i++){
+	_light = (sbs.getRound() % 5 == 0) ? 1 : 0;
+	for (i = 0; i < 2; i++){
+		move = false;
+		target.clear();
+
+		// Reset target type
+		if (_my_drone[0].drone_y <= 500 && _my_drone[1].drone_y <= 500)
+			sbs.setTargetType(0);
+
+		// Look for monsters
+		for (j = 0; j < _visible_creature_count; j++){
+			creature	c = sbs.getCreature(_visible_creature[j].creature_id);
+			if (c.type == -1)
+				sbs.setTargetType(3);
+		}
+
+		// Go up if save mode
+		if (sbs.getTargetType() >= 3){
+			moveUp(i);
+			continue;
+		}
+
 		// Look for every radar blip
 		for (j = 0; j < _radar_blip_count; j++){
 			if (_radar_blip[j].drone_id == _my_drone[i].drone_id){
 				creature	c = sbs.getCreature(_radar_blip[j].creature_id);
+				// If this fish is at targeting level and is not scan by my drone
 				if (c.type == sbs.getTargetType() && !isDroneScan(_radar_blip[j].creature_id))
 					target.push_back(_radar_blip[j]);
 			}
 		}
+		for (unsigned long l = 0; l < target.size(); l++)
+			cerr << l << " drone_id=" << target[l].drone_id << " creature_id=" << target[l].creature_id << " radar=" << target[l].radar << endl;
 
 		// If no target founded
 		if (target.empty()){
-			moveUp(i);
+			sbs.incrementTargetType();
+			i--;
 			continue;
 		}
 
@@ -218,7 +253,7 @@ void	SeaBedSecurityLocal::game(SeaBedSecurity &sbs){
 		lr = (i == 0) ? 'L' : 'R';
 		for (unsigned long l = 0; l < target.size(); l++){
 			if (target[l].radar[1] == lr){
-				if (lr == 'L')
+				if (i == 0)
 					(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveBR(i) : moveTR(i);
 				else
 					(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveBL(i) : moveTL(i);
@@ -229,14 +264,11 @@ void	SeaBedSecurityLocal::game(SeaBedSecurity &sbs){
 
 		// If no fish in border
 		if (move == false){
-			if (lr == 'L')
+			if (i == 0)
 				(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveBL(i) : moveTL(i);
 			else
 				(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveBR(i) : moveTR(i);
 			move = true;
 		}
-
-		// Clear target list
-		target.clear();
 	}
 }

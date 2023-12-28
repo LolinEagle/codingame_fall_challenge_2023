@@ -20,10 +20,13 @@ class SeaBedSecurity{
 		int			&getRound(void);
 		int			&getTargetType(void);
 		creature	&getCreature(int creature_id);
+		void		setTargetType(int target_type);
 };
 
 class SeaBedSecurityLocal{
 	private:
+		bool						_light;
+
 		// Score
 		int							_my_score;					// My score
 		int							_foe_score;					// Foe score
@@ -36,9 +39,9 @@ class SeaBedSecurityLocal{
 
 		// Drone
 		int 						_my_drone_count;			// My number of drones (should be 2)
-		drone						_my_drone[2];				// My list of drones
+		drone						_my_drone[2];				// My list of drones (0 = left 1 = right)
 		int							_foe_drone_count;			// Foe number of drones (should be 2)
-		drone						_foe_drone[2];				// Foe list of drones
+		drone						_foe_drone[2];				// Foe list of drones (0 = left 1 = right)
 
 		// Drone scan
 		int 						_drone_scan_count;			// Number of unsaved scans.
@@ -58,6 +61,7 @@ class SeaBedSecurityLocal{
 		void	print(void);
 		bool	isDroneScan(int creature_id);
 		void	moveUp(int &i);
+		void	moveDown(int &i);
 		void	moveTL(int &i);
 		void	moveTR(int &i);
 		void	moveBR(int &i);
