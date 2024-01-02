@@ -60,11 +60,10 @@ class SeaBedSecurityLocal{
 
 		void	print(void);
 		bool	isDroneScan(int creature_id);
-		void	moveUp(int &i);
-		void	moveDown(int &i);
-		void	moveTL(int &i);
-		void	moveTR(int &i);
-		void	moveBR(int &i);
-		void	moveBL(int &i);
+		void	moveXY(int &i, int angle, vector<visible_creature> &monster);
+		void	moveTL(int &i, vector<visible_creature> &monster);
+		void	moveTR(int &i, vector<visible_creature> &monster);
+		void	moveBR(int &i, vector<visible_creature> &monster);
+		void	moveBL(int &i, vector<visible_creature> &monster);
 		void	game(SeaBedSecurity &sbs);
 };
