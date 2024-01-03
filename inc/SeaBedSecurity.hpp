@@ -25,7 +25,7 @@ class SeaBedSecurity{
 
 class SeaBedSecurityLocal{
 	private:
-		bool						_light;
+		bool						_light;						// Should light be on
 
 		// Score
 		int							_my_score;					// My score
@@ -61,9 +61,5 @@ class SeaBedSecurityLocal{
 		void	print(void);
 		bool	isDroneScan(int creature_id);
 		void	moveXY(int &i, int angle, vector<visible_creature> &monster);
-		void	moveTL(int &i, vector<visible_creature> &monster);
-		void	moveTR(int &i, vector<visible_creature> &monster);
-		void	moveBR(int &i, vector<visible_creature> &monster);
-		void	moveBL(int &i, vector<visible_creature> &monster);
 		void	game(SeaBedSecurity &sbs);
 };

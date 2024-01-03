@@ -2,7 +2,7 @@
 
 using namespace std;
 
-int	sqr(int x){
+int		sqr(int x){
 	return (x * x);
 }
 
@@ -85,13 +85,13 @@ SeaBedSecurityLocal::SeaBedSecurityLocal(void){
 	for (int i = 0; i < _my_drone_count; i++){
 		drone	d;
 		cin >> d.drone_id >> d.drone_x >> d.drone_y >> d.emergency >> d.battery; cin.ignore();
-		(d.drone_x < 5000) ? _my_drone[0] = d : _my_drone[1] = d;
+		(d.drone_id < 2) ? _my_drone[0] = d : _my_drone[1] = d;
 	}
 	cin >> _foe_drone_count; cin.ignore();
 	for (int i = 0; i < _foe_drone_count; i++){
 		drone	d;
 		cin >> d.drone_id >> d.drone_x >> d.drone_y >> d.emergency >> d.battery; cin.ignore();
-		(d.drone_x < 5000) ? _foe_drone[0] = d : _foe_drone[1] = d;
+		(d.drone_id < 2) ? _foe_drone[0] = d : _foe_drone[1] = d;
 	}
 
 	// Drone scan
@@ -178,32 +178,39 @@ bool	SeaBedSecurityLocal::isDroneScan(int creature_id){
 }
 
 void	SeaBedSecurityLocal::moveXY(int &i, int angle, vector<visible_creature> &monster){
-	int		x, y;
-	double	theta;
+	int		x, y;	// New coordinates
+	double	theta;	// Radians
+	const int	dx = _my_drone[i].drone_x;
+	const int	dy = _my_drone[i].drone_y;
 
-	// Convert angle to radians & Calculate coordinates
-	theta = angle * M_PI / 180;
-	x = round(600 * cos(theta));
-	y = round(600 * sin(theta));
+	int newAngle = 0;
+	for (double d = 0.03125; d <= 1.0; d += 0.03125){
+		// Convert angle to radians & Calculate coordinates
+		theta = angle * M_PI / 180;
+		x = round(600 * cos(theta) * d);
+		y = round(600 * sin(theta) * d);
+
+		// Look for every monsters
+		for (unsigned long l = 0; l < monster.size(); l++){
+			const int	mx = monster[l].creature_x;
+			const int	my = monster[l].creature_y;
+			const int	mvx = round(monster[l].creature_vx * d);
+			const int	mvy = round(monster[l].creature_vy * d);
+
+			if (find_dist(dx + x, dy + y, mx + mvx, my + mvy) <= 500){
+				(++newAngle % 2 == 0) ? angle += newAngle : angle -= newAngle;
+				d = 0.03125;
+				break;
+			}
+		}
+
+		// No escape
+		if (newAngle > 180)
+			break;
+	}
 
 	// Move
-	cout << "MOVE " << _my_drone[i].drone_x + x << ' ' << _my_drone[i].drone_y + y << ' ' << _light << endl;
-}
-
-void	SeaBedSecurityLocal::moveTL(int &i, vector<visible_creature> &monster){
-	moveXY(i, 225, monster);
-}
-
-void	SeaBedSecurityLocal::moveTR(int &i, vector<visible_creature> &monster){
-	moveXY(i, 315, monster);
-}
-
-void	SeaBedSecurityLocal::moveBL(int &i, vector<visible_creature> &monster){
-	moveXY(i, 135, monster);
-}
-
-void	SeaBedSecurityLocal::moveBR(int &i, vector<visible_creature> &monster){
-	moveXY(i, 45, monster);
+	cout << "MOVE " << dx + x << ' ' << dy + y << ' ' << _light << endl;
 }
 
 void	SeaBedSecurityLocal::game(SeaBedSecurity &sbs){
@@ -220,7 +227,7 @@ void	SeaBedSecurityLocal::game(SeaBedSecurity &sbs){
 		move = false;
 		target.clear();
 		monster.clear();
-		if (_my_drone[0].drone_y <= 500 && _my_drone[1].drone_y <= 500)
+		if ((_my_drone[0].drone_y <= 500 || _my_drone[0].emergency == 1) && (_my_drone[1].drone_y <= 500 || _my_drone[1].emergency == 1))
 			sbs.setTargetType(0);
 
 		// Look for monsters
@@ -229,7 +236,7 @@ void	SeaBedSecurityLocal::game(SeaBedSecurity &sbs){
 			if (c.type == -1)
 				monster.push_back(_visible_creature[j]);
 		}
-		if (!monster.empty())
+		if (monster.empty() == false)
 			_light = 0;
 
 		// Save mode
@@ -247,8 +254,6 @@ void	SeaBedSecurityLocal::game(SeaBedSecurity &sbs){
 					target.push_back(_radar_blip[j]);
 			}
 		}
-		// for (unsigned long l = 0; l < target.size(); l++)
-		// 	cerr << l << " drone_id=" << target[l].drone_id << " creature_id=" << target[l].creature_id << " radar=" << target[l].radar << endl;
 
 		// If no target founded
 		if (target.empty()){
@@ -258,13 +263,13 @@ void	SeaBedSecurityLocal::game(SeaBedSecurity &sbs){
 		}
 
 		// Look for fish in border
-		lr = (i == 0) ? 'L' : 'R';
+		lr = (_my_drone[i].drone_id == 0 || _my_drone[i].drone_id == 3) ? 'L' : 'R';
 		for (unsigned long l = 0; l < target.size(); l++){
 			if (target[l].radar[1] == lr){
-				if (i == 0)
-					(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveBL(i, monster) : moveTL(i, monster);
+				if (_my_drone[i].drone_id == 0 || _my_drone[i].drone_id == 3)
+					(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveXY(i, 135, monster) : moveXY(i, 225, monster);
 				else
-					(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveBR(i, monster) : moveTR(i, monster);
+					(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveXY(i, 45, monster) : moveXY(i, 315, monster);
 				move = true;
 				break;
 			}
@@ -272,10 +277,10 @@ void	SeaBedSecurityLocal::game(SeaBedSecurity &sbs){
 
 		// If no fish in border
 		if (move == false){
-			if (i == 0)
-				(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveBR(i, monster) : moveTR(i, monster);
+			if (_my_drone[i].drone_id == 0 || _my_drone[i].drone_id == 3)
+				(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveXY(i, 45, monster) : moveXY(i, 315, monster);
 			else
-				(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveBL(i, monster) : moveTL(i, monster);
+				(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveXY(i, 135, monster) : moveXY(i, 225, monster);
 			move = true;
 		}
 	}
