@@ -187,8 +187,15 @@ void	SeaBedSecurityLocal::moveXY(int &i, int angle, vector<visible_creature> &mo
 	for (double d = 0.03125; d <= 1.0; d += 0.03125){
 		// Convert angle to radians & Calculate coordinates
 		theta = angle * M_PI / 180;
-		x = round(600 * cos(theta) * d);
-		y = round(600 * sin(theta) * d);
+		x = round((600.0 * d) * cos(theta));
+		y = round((600.0 * d) * sin(theta));
+
+		// If try to move outside the box
+		if (dx + x < 0 || dx + x > 9999 || dy + y < 0 || dy + y > 9999){
+			(++newAngle % 2 == 0) ? angle += newAngle : angle -= newAngle;
+			d = 0.03125;
+			continue;
+		}
 
 		// Look for every monsters
 		for (unsigned long l = 0; l < monster.size(); l++){
@@ -197,7 +204,7 @@ void	SeaBedSecurityLocal::moveXY(int &i, int angle, vector<visible_creature> &mo
 			const int	mvx = round(monster[l].creature_vx * d);
 			const int	mvy = round(monster[l].creature_vy * d);
 
-			if (find_dist(dx + x, dy + y, mx + mvx, my + mvy) <= 500){
+			if (find_dist(dx + x, dy + y, mx + mvx, my + mvy) <= 501){
 				(++newAngle % 2 == 0) ? angle += newAngle : angle -= newAngle;
 				d = 0.03125;
 				break;
@@ -205,7 +212,7 @@ void	SeaBedSecurityLocal::moveXY(int &i, int angle, vector<visible_creature> &mo
 		}
 
 		// No escape
-		if (newAngle > 180)
+		if (newAngle > 360)
 			break;
 	}
 
@@ -221,7 +228,7 @@ void	SeaBedSecurityLocal::game(SeaBedSecurity &sbs){
 	vector<radar_blip>			target;		// Drone target
 	vector<visible_creature>	monster;	// Monster in visible range
 
-	_light = (sbs.getRound() % 5 == 0) ? 1 : 0;
+	_light = (sbs.getRound() % 3 == 0) ? 1 : 0;
 	for (i = 0; i < 2; i++){
 		// Reset
 		move = false;
@@ -236,8 +243,6 @@ void	SeaBedSecurityLocal::game(SeaBedSecurity &sbs){
 			if (c.type == -1)
 				monster.push_back(_visible_creature[j]);
 		}
-		if (monster.empty() == false)
-			_light = 0;
 
 		// Save mode
 		if (sbs.getTargetType() >= 3){
