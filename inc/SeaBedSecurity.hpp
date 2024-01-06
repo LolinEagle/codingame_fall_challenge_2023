@@ -8,19 +8,25 @@ class SeaBedSecurity{
 		int					_target_type;		// Target type (3 = save mode)
 		int					_creature_count;	// Number of creatures
 		vector<creature>	_creature;			// List of all creatures
+		bool				_go_down;			// Should the drones go down ?
+		int					_pity;				// Pity for the fishs
 	public:
 		SeaBedSecurity(void);
 		~SeaBedSecurity();
 
-		void		print(void);
 		void		incrementRound(void);
 		void		incrementTargetType(void);
+		void		decrementTargetType(void);
 
 		// Getters & setters
 		int			&getRound(void);
 		int			&getTargetType(void);
 		creature	&getCreature(int creature_id);
+		bool		&getGoDown(void);
+		int			&getPity(void);
 		void		setTargetType(int target_type);
+		void		setGoDown(bool go_down);
+		void		setPity(int pity);
 };
 
 class SeaBedSecurityLocal{
@@ -58,7 +64,6 @@ class SeaBedSecurityLocal{
 		SeaBedSecurityLocal(void);
 		~SeaBedSecurityLocal();
 
-		void	print(void);
 		bool	isDroneScan(int creature_id);
 		void	moveXY(int &i, int angle, vector<visible_creature> &monster);
 		void	game(SeaBedSecurity &sbs);

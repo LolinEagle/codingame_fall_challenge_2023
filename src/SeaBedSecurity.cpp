@@ -19,17 +19,12 @@ SeaBedSecurity::SeaBedSecurity(void){
 		cin >> c.creature_id >> c.color >> c.type; cin.ignore();
 		_creature.push_back(c);
 	}
+	_go_down = true;
+	_pity = 3;
 };
 
 SeaBedSecurity::~SeaBedSecurity(){
 };
-
-void		SeaBedSecurity::print(void){
-	cerr << "_round=" << _round << endl;
-	cerr << "_creature_count=" << _creature_count << endl;
-	for (int i = 0; i < _creature_count; i++)
-		cerr << "_creature[" << i << "] creature_id=" << _creature[i].creature_id << " color=" << _creature[i].color << " type=" << _creature[i].type << endl;
-}
 
 void		SeaBedSecurity::incrementRound(void){
 	_round++;
@@ -37,6 +32,10 @@ void		SeaBedSecurity::incrementRound(void){
 
 void		SeaBedSecurity::incrementTargetType(void){
 	_target_type++;
+}
+
+void		SeaBedSecurity::decrementTargetType(void){
+	_target_type--;
 }
 
 int			&SeaBedSecurity::getRound(void){
@@ -57,8 +56,24 @@ creature	&SeaBedSecurity::getCreature(int creature_id){
 	return (_creature[i]);
 }
 
+bool		&SeaBedSecurity::getGoDown(void){
+	return (_go_down);
+}
+
+int			&SeaBedSecurity::getPity(void){
+	return (_pity);
+}
+
 void		SeaBedSecurity::setTargetType(int target_type){
 	_target_type = target_type;
+}
+
+void		SeaBedSecurity::setGoDown(bool go_down){
+	_go_down = go_down;
+}
+
+void		SeaBedSecurity::setPity(int pity){
+	_pity = pity;
 }
 
 SeaBedSecurityLocal::SeaBedSecurityLocal(void){
@@ -122,53 +137,14 @@ SeaBedSecurityLocal::SeaBedSecurityLocal(void){
 SeaBedSecurityLocal::~SeaBedSecurityLocal(){
 };
 
-void	SeaBedSecurityLocal::print(void){
+bool	SeaBedSecurityLocal::isDroneScan(int creature_id){
 	int	i;
 
-	// Score
-	cerr << "---------------------------------------------------------" << endl;
-	cerr << "_my_score=" << _my_score << endl;
-	cerr << "_foe_score=" << _foe_score << endl;
-
-	// Scan
-	cerr << "---------------------------------------------------------" << endl;
-	cerr << "_my_scan_count=" << _my_scan_count << endl;
-	for (i = 0; i < _my_scan_count; i++)
-		cerr << "_my_scan[" << i << "] creature_id=" << _my_scan[i] << endl;
-	cerr << "_foe_scan_count=" << _foe_scan_count << endl;
-	for (i = 0; i < _foe_scan_count; i++)
-		cerr << "_foe_scan[" << i << "] creature_id=" << _my_scan[i] << endl;
-
-	// Drone
-	cerr << "---------------------------------------------------------" << endl;
-	cerr << "_my_drone_count=" << _my_drone_count << endl;
-	for (i = 0; i < _my_drone_count; i++)
-		cerr << "_my_drone[" << i << "] drone_id=" << _my_drone[i].drone_id << " drone_x=" << _my_drone[i].drone_x << " drone_y=" << _my_drone[i].drone_y << " emergency=" << _my_drone[i].emergency << " battery=" << _my_drone[i].battery << endl;
-	cerr << "_foe_drone_count=" << _foe_drone_count << endl;
-	for (i = 0; i < _foe_drone_count; i++)
-		cerr << "_foe_drone[" << i << "] drone_id=" << _foe_drone[i].drone_id << " drone_x=" << _foe_drone[i].drone_x << " drone_y=" << _foe_drone[i].drone_y << " emergency=" << _foe_drone[i].emergency << " battery=" << _foe_drone[i].battery << endl;
-
-	// Drone scan
-	cerr << "---------------------------------------------------------" << endl;
-	cerr << "_drone_scan_count=" << _drone_scan_count << endl;
-	for (i = 0; i < _drone_scan_count; i++)
-		cerr << "_drone_scan[" << i << "] drone_id=" << _drone_scan[i].drone_id << " creature_id=" << _drone_scan[i].creature_id << endl;
-
-	// Visible creature
-	cerr << "---------------------------------------------------------" << endl;
-	cerr << "_visible_creature_count=" << _visible_creature_count << endl;
-	for (i = 0; i < _visible_creature_count; i++)
-		cerr << "_visible_creature[" << i << "] creature_id" << _visible_creature[i].creature_id << " creature_x" << _visible_creature[i].creature_x << " creature_y" << _visible_creature[i].creature_y << " creature_vx" << _visible_creature[i].creature_vx << " creature_vy" << _visible_creature[i].creature_vy << endl;
-
-	// Radar blip
-	cerr << "---------------------------------------------------------" << endl;
-	cerr << "_radar_blip_count=" << _radar_blip_count << endl;
-	for (i = 0; i < _radar_blip_count; i++)
-		cerr << "_radar_blip[" << i << "] drone_id=" << _radar_blip[i].drone_id << " creature_id=" << _radar_blip[i].creature_id << " radar=" << _radar_blip[i].radar << endl;
-}
-
-bool	SeaBedSecurityLocal::isDroneScan(int creature_id){
-	for (int i = 0; i < _drone_scan_count; i++){
+	for (i = 0; i < _my_scan_count; i++){
+		if (_my_scan[i] == creature_id)
+			return (true);
+	}
+	for (i = 0; i < _drone_scan_count; i++){
 		if (_drone_scan[i].drone_id != _my_drone[0].drone_id && _drone_scan[i].drone_id != _my_drone[1].drone_id)
 			continue;
 		if (_drone_scan[i].creature_id == creature_id)
@@ -223,19 +199,33 @@ void	SeaBedSecurityLocal::moveXY(int &i, int angle, vector<visible_creature> &mo
 void	SeaBedSecurityLocal::game(SeaBedSecurity &sbs){
 	int							i;			// For my drone
 	int							j;			// For monsters and radar blip
+	int							lr_count;	// Number of fish in the left / right side
 	char						lr;			// Character for drone
-	bool						move;		// Have move this round
 	vector<radar_blip>			target;		// Drone target
 	vector<visible_creature>	monster;	// Monster in visible range
 
 	_light = (sbs.getRound() % 3 == 0) ? 1 : 0;
 	for (i = 0; i < 2; i++){
 		// Reset
-		move = false;
 		target.clear();
 		monster.clear();
-		if ((_my_drone[0].drone_y <= 500 || _my_drone[0].emergency == 1) && (_my_drone[1].drone_y <= 500 || _my_drone[1].emergency == 1))
+		if ((_my_drone[0].drone_y < 500 || _my_drone[0].emergency == 1) && (_my_drone[1].drone_y < 500 || _my_drone[1].emergency == 1)){
 			sbs.setTargetType(0);
+			sbs.setGoDown(true);
+			sbs.setPity(0);
+			moveXY(i, 90, monster);
+			continue;
+		}
+
+		// Save mode
+		if (sbs.getTargetType() >= 3){
+			sbs.setTargetType(2);
+			sbs.setGoDown(false);
+			if (sbs.getPity() != 0)
+				sbs.setPity(sbs.getPity() - 1);
+			i--;
+			continue;
+		}
 
 		// Look for monsters
 		for (j = 0; j < _visible_creature_count; j++){
@@ -244,8 +234,8 @@ void	SeaBedSecurityLocal::game(SeaBedSecurity &sbs){
 				monster.push_back(_visible_creature[j]);
 		}
 
-		// Save mode
-		if (sbs.getTargetType() >= 3){
+		// Go up
+		if (sbs.getTargetType() < 0){
 			moveXY(i, 270, monster);
 			continue;
 		}
@@ -261,32 +251,38 @@ void	SeaBedSecurityLocal::game(SeaBedSecurity &sbs){
 		}
 
 		// If no target founded
-		if (target.empty()){
+		cerr << target.size() << " <= " << sbs.getPity() << " sbs.getGoDown()=" << sbs.getGoDown() << endl;
+		if (static_cast<int>(target.size()) <= sbs.getPity() && sbs.getGoDown() == true){
 			sbs.incrementTargetType();
+			i--;
+			continue;
+		} else if (static_cast<int>(target.size()) <= sbs.getPity() && sbs.getGoDown() == false){
+			sbs.decrementTargetType();
 			i--;
 			continue;
 		}
 
 		// Look for fish in border
+		lr_count = 0;
 		lr = (_my_drone[i].drone_id == 0 || _my_drone[i].drone_id == 3) ? 'L' : 'R';
 		for (unsigned long l = 0; l < target.size(); l++){
-			if (target[l].radar[1] == lr){
-				if (_my_drone[i].drone_id == 0 || _my_drone[i].drone_id == 3)
-					(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveXY(i, 135, monster) : moveXY(i, 225, monster);
-				else
-					(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveXY(i, 45, monster) : moveXY(i, 315, monster);
-				move = true;
-				break;
-			}
+			if (target[l].radar[1] == lr)
+				lr_count++;
 		}
 
-		// If no fish in border
-		if (move == false){
+		// Move
+		if (lr_count == 1){
+			(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveXY(i, 90, monster) : moveXY(i, 270, monster);
+		} else if (lr_count > 1){
+			if (_my_drone[i].drone_id == 0 || _my_drone[i].drone_id == 3)
+				(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveXY(i, 135, monster) : moveXY(i, 225, monster);
+			else
+				(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveXY(i, 45, monster) : moveXY(i, 315, monster);
+		} else {
 			if (_my_drone[i].drone_id == 0 || _my_drone[i].drone_id == 3)
 				(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveXY(i, 45, monster) : moveXY(i, 315, monster);
 			else
 				(_my_drone[i].drone_y < 3750 + (2500 * sbs.getTargetType())) ? moveXY(i, 135, monster) : moveXY(i, 225, monster);
-			move = true;
 		}
 	}
 }
