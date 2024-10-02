@@ -6,7 +6,8 @@ The game is played in turns. Each turn, each player gives an action for their dr
 ## Deployment
 To deploy this project run
 ```bash
-git clone https://github.com/LolinEagle/codingame_fall_challenge_2023 && cd codingame_fall_challenge_2023 && make
+git clone https://github.com/LolinEagle/codingame_fall_challenge_2023
+&& cd codingame_fall_challenge_2023 && make
 ```
 
 ## Related projects
