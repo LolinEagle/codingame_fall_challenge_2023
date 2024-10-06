@@ -9,10 +9,3 @@ To deploy this project run
 git clone https://github.com/LolinEagle/codingame_fall_challenge_2023 &&
 cd codingame_fall_challenge_2023 && make
 ```
-
-## Related projects
-Here are some related projects
-
-[Fall Challenge 2024](https://github.com/LolinEagle/codingame_fall_challenge_2024)
-
-[Summer Challenge 2024](https://github.com/LolinEagle/codingame_summer_challenge_2024)
